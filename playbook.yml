@@ -1,0 +1,54 @@
+---
+- hosts: sshserver
+  vars:
+    http_port: 80
+    max_clients: 200
+  remote_user: root
+  tasks:
+
+    - name: "install nginx"
+      apt: "name=nginx state=latest"
+      become: yes
+      become_method: sudo
+
+    - name: "excute nginx"
+      service: "name=nginx state=started"
+      become: yes
+      become_method: sudo
+
+    - name: "install curl"
+      apt: "name=curl state=latest"
+
+    - name: "update nodejs source"
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
+
+    - name: "install nodejs"
+      apt: "name=nodejs state=latest"
+
+    - name: "install git"
+      apt: "name=git state=latest"
+
+    - name: "clone git"
+      git:
+        repo: 'https://git.mrzee.fr/student/my-node-project.git'
+        dest: /var/www/my-node-project
+
+    - name: "insall nodejs dep"
+      npm:
+        path: /var/www/my-node-project/myapp/
+
+    - name: "install pm2"
+      npm:
+        name: pm2
+        global: yes
+
+    - name: "execute pm2"
+      shell: pm2 start /var/www/my-node-project/myapp/bin/www/
+
+    - name: "replace default by vhost"
+      shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
+
+    - name: "nginx restart"
+      shell: service nginx restart
+
+
